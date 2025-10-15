@@ -1,15 +1,18 @@
-import { Button } from '@/components/ui/button'
-import React from 'react'
+import CTASection from '@/components/main/cta-section'
+import FAQSection from '@/components/main/faq'
+import FeaturesSection from '@/components/main/feature-section'
+import HeroSection from '@/components/main/hero-section'
+import HowItWorks from '@/components/main/how-it-works'
 
 const HomePage = () => {
+
   return (
     <div>
-        <h1>
-            Welcome to SpeakSmart AI
-        </h1>
-        <Button>
-            Welcome
-        </Button>
+        <HeroSection />
+        <FeaturesSection />
+        <HowItWorks />
+        <FAQSection />
+        <CTASection />
     </div>
   )
 }
