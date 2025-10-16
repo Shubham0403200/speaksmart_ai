@@ -1,10 +1,11 @@
 'use client'
-
 import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Logo } from './logo'
+import { usePathname } from "next/navigation";
+
 
 const MENU_ITEMS = [
   { name: 'Home', href: '/' },
@@ -14,6 +15,7 @@ const MENU_ITEMS = [
 ]
 
 export const Header = () => {
+
   const [menuOpen, setMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
 
@@ -21,7 +23,14 @@ export const Header = () => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
-  }, [])
+  }, []);
+
+  const pathname = usePathname();
+  
+  if (pathname.includes('/exam')) {
+    return null;
+  }
+
 
   return (
     <header className="fixed w-full z-20">
@@ -51,7 +60,7 @@ export const Header = () => {
               >
                 <Menu
                   className={cn(
-                    'm-auto size-6 duration-200',
+                    'm-auto size-4 duration-200',
                     menuOpen ? 'scale-0 opacity-0' : ''
                   )}
                 />
@@ -83,7 +92,7 @@ export const Header = () => {
             {/* Mobile menu overlay */}
             <div
               className={cn(
-                'bg-background lg:hidden mb-6 hidden w-full flex-col rounded-3xl border p-6 shadow-2xl shadow-zinc-300/20',
+                'bg-background lg:hidden mb-6 hidden w-full flex-col rounded-3xl border p-6 shadow-2xl shadow-zinc-600/20',
                 menuOpen ? 'flex' : ''
               )}
             >
