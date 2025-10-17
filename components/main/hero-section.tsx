@@ -6,13 +6,63 @@ import { useGSAP } from "@gsap/react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { playfair } from "./logo";
+import { PauseIcon, PlayIcon } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
 
 export default function HeroSection() {
-  // GSAP Animation Timeline
+  const [isPlayed, setIsPlayed] = useState<boolean>(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Initialize audio element
+  useEffect(() => {
+    audioRef.current = new Audio('/audio/natural_place.mp3');
+    audioRef.current.preload = "auto";
+
+    // Cleanup on component unmount
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  const handleClick = () => {
+    if (!audioRef.current) return;
+
+    if (isPlayed) {
+      audioRef.current.pause();
+      setIsPlayed(false);
+    } else {
+      audioRef.current.play()
+        .then(() => {
+          setIsPlayed(true);
+        })
+        .catch((error) => {
+          console.error("Error playing audio:", error);
+        });
+    }
+  };
+
+  // Handle audio ended event
+  useEffect(() => {
+    if (!audioRef.current) return;
+
+    const handleEnded = () => {
+      setIsPlayed(false);
+    };
+
+    audioRef.current.addEventListener('ended', handleEnded);
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.removeEventListener('ended', handleEnded);
+      }
+    };
+  }, []);
+
   useGSAP(() => {
     const timeline = gsap.timeline();
-
-    // 1️⃣ H1 animation (slide from left)
     timeline.from(".hero-h1", {
       x: -100,
       opacity: 0,
@@ -54,7 +104,7 @@ export default function HeroSection() {
       <div className="flex-1 text-center md:text-left space-y-6 mt-20 md:mt-0">
         <h1 className="hero-h1 text-5xl md:text-6xl font-extrabold leading-tighter text-gray-900 bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500">
           Practice. <br />
-          <span className={cn("font-semibold text-3xl md:text-4xl", playfair.className)}>Perfect. Perform.</span>
+          <span className={cn("font-semibold tracking-tight text-3xl md:text-4xl", playfair.className)}>Perfect. Perform.</span>
         </h1>
 
         <p className="hero-p text-gray-600 max-w-md sm:max-w-xl text-xs sm:text-sm md:text-base mx-auto md:mx-0">
@@ -85,7 +135,7 @@ export default function HeroSection() {
         <Card className="max-w-sm sm:max-w-md w-full shadow-2xl border border-gray-100 bg-white/70 backdrop-blur-md rounded-2xl transition-transform hover:scale-105 hover:shadow-2xl">
           <CardContent className="p-4 sm:p-6">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-r from-purple-600 to-blue-500 flex items-center justify-center text-white font-semibold text-base sm:text-lg shadow-md transition-transform hover:scale-110">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-r from-purple-600 to-blue-500 flex items-center justify-center text-white font-semibold text-base sm:text-lg shadow-lg transition-transform hover:scale-105">
                 SS
               </div>
               <div>
@@ -100,12 +150,22 @@ export default function HeroSection() {
               <span className="font-medium">Sample question:</span> Describe a Natural Place. You should say: where you went, who you went with, what you did, and explain why it was memorable.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Button variant="outline" className="w-full sm:w-auto rounded-xl hover:scale-105 transition-transform text-xs md:text-sm">
-                Play
+            <div className="flex gap-x-3 items-center w-full">
+              <Button onClick={handleClick} variant="outline" className="rounded-xl transition-transform flex items-center gap-x-1 text-xs md:text-sm">
+                { isPlayed ? (
+                  <>
+                    <PauseIcon className='w-4 h-4' />
+                    Pause
+                  </>
+                )  : (
+                  <>                  
+                    <PlayIcon className='w-4 h-4' />
+                    Play
+                  </>
+                )}
               </Button>
               <Link href='/ielts-speaking'>
-                <Button className="bg-black text-white hover:bg-gray-800 hover:scale-105 transition-transform w-full text-xs md:text-sm sm:w-auto rounded-xl">
+                <Button className="transition-transform text-xs md:text-sm rounded-xl">
                   Practice Now
                 </Button>
               </Link>

@@ -1,8 +1,8 @@
 // app/api/generate-questions/ielts/route.ts
-
 import { NextResponse } from "next/server"
+import { GoogleGenAI } from "@google/genai"
 
-// === Part 2 Cue Card List ===
+// === Enhanced Part 2 Cue Card List ===
 const PART2_CUE_LIST = [
   "Describe an interesting traditional story",
   "Describe a successful sportsperson you admire",
@@ -27,108 +27,179 @@ const PART2_CUE_LIST = [
 ]
 
 // === Helper Functions ===
-const pickCueCard = () =>
-  PART2_CUE_LIST[Math.floor(Math.random() * PART2_CUE_LIST.length)]
+const pickCueCard = () => PART2_CUE_LIST[Math.floor(Math.random() * PART2_CUE_LIST.length)]
 
-const fallbackQuestions = (cue: string) => ({
-  part1: [
-    "What do you do for work or study?",
-    "How do you usually spend your weekends?",
-    "Do you prefer to travel alone or with others?",
-    "What kind of food do you enjoy?",
-    "Tell me about a hobby you have."
-  ],
-  part2: [cue],
-  part3: [
-    "How do people in your country typically plan holidays?",
-    "What are the advantages and disadvantages of traveling alone?",
-    "How has tourism changed in recent years?"
-  ]
-})
+// Enhanced fallback questions that are more relevant to the cue card
+const getEnhancedFallbackQuestions = (cue: string) => {
+  // Extract topic from cue card to make part3 questions more relevant
+  const topic = cue.toLowerCase();
+  
+  let relevantPart3Questions = [
+    "How do people in your country typically approach this?",
+    "What are the advantages and disadvantages of this?",
+    "How has this changed in recent years?"
+  ];
 
-const GEMINI_PROMPT = `You are an expert IELTS speaking examiner. Produce a structured JSON object:
-{
-  "part1": [ /* 5 short conversational questions */ ],
-  "part2": [ /* 1 cue card (provided by the server) */ ],
-  "part3": [ /* 3 deeper follow-up discussion questions */ ]
+  // Add more context-specific part3 questions based on cue card topic
+  if (topic.includes("social media")) {
+    relevantPart3Questions = [
+      "How has social media changed the way people share information?",
+      "What are the positive and negative effects of social media on society?",
+      "Do you think social media will continue to be important in the future?"
+    ];
+  } else if (topic.includes("technology") || topic.includes("difficult")) {
+    relevantPart3Questions = [
+      "Why do you think some people find technology difficult to use?",
+      "How can companies make technology more user-friendly?",
+      "What skills are important for using modern technology effectively?"
+    ];
+  } else if (topic.includes("friend") || topic.includes("family")) {
+    relevantPart3Questions = [
+      "How important are friendships in people's lives?",
+      "What qualities make a good friend?",
+      "How have relationships between friends changed over time?"
+    ];
+  } else if (topic.includes("travel") || topic.includes("place")) {
+    relevantPart3Questions = [
+      "Why do you think people enjoy traveling to new places?",
+      "How has tourism affected different countries?",
+      "What are the benefits of experiencing different cultures?"
+    ];
+  }
+
+  return {
+    part1: [
+      "What do you do for work or study?",
+      "How do you usually spend your weekends?",
+      "Do you prefer to travel alone or with others?",
+      "What kind of food do you enjoy?",
+      "Tell me about a hobby you have."
+    ],
+    part2: [cue],
+    part3: relevantPart3Questions
+  };
 }
-Rules:
-- Use exactly 5 concise Part 1 questions (6–14 words).
-- Use the exact cue card from the server for part2.
-- Create exactly 3 logical follow-up questions for part3.
-Return only valid JSON — no explanations.`
 
-// === MAIN HANDLER ===
+// AI-generated questions cache to avoid API calls when possible
+const aiGeneratedQuestionsCache = new Map();
+
 export async function POST() {
   try {
     const chosenCue = pickCueCard()
-    const GEMINI_API_URL = process.env.GEMINI_API_URL
     const GEMINI_API_KEY = process.env.GEMINI_API_KEY
 
-    // Fallback if environment not configured
-    if (!GEMINI_API_URL || !GEMINI_API_KEY) {
-      console.log("⚠️ GEMINI_API_URL or GEMINI_API_KEY missing — using fallback.")
-      return NextResponse.json(fallbackQuestions(chosenCue), { status: 200 })
+    console.log("🎯 Selected cue card:", chosenCue)
+
+    // Check cache first
+    if (aiGeneratedQuestionsCache.has(chosenCue)) {
+      console.log("♻️ Using cached questions for:", chosenCue)
+      return NextResponse.json(aiGeneratedQuestionsCache.get(chosenCue))
     }
 
-    const prompt = `${GEMINI_PROMPT}\n\nServerProvidedCueCard: "${chosenCue}"\nInstructions: Use the provided cue card exactly as given.`
-
-    const apiResp = await fetch(GEMINI_API_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${GEMINI_API_KEY}`
-      },
-      body: JSON.stringify({
-        prompt,
-        max_output_tokens: 400,
-        temperature: 0.6,
-        top_p: 0.95
-      })
-    })
-
-    // if Gemini fails or returns empty body
-    if (!apiResp.ok) {
-      console.warn("Gemini API failed:", apiResp.statusText)
-      return NextResponse.json(fallbackQuestions(chosenCue), { status: 200 })
+    // If no API key, return enhanced fallback immediately
+    if (!GEMINI_API_KEY) {
+      console.log("⚠️ No API key - using enhanced fallback")
+      const fallback = getEnhancedFallbackQuestions(chosenCue)
+      return NextResponse.json(fallback)
     }
 
-    const rawText = await apiResp.text()
-    if (!rawText) {
-      console.warn("Empty response from Gemini.")
-      return NextResponse.json(fallbackQuestions(chosenCue), { status: 200 })
-    }
+    const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY })
 
-    // Extract valid JSON substring
-    const firstBrace = rawText.indexOf("{")
-    const lastBrace = rawText.lastIndexOf("}")
-    let parsed = null
-    if (firstBrace !== -1 && lastBrace !== -1) {
-      const jsonSubstring = rawText.slice(firstBrace, lastBrace + 1)
+    const prompt = `As an IELTS examiner, create exactly:
+- 5 short Part 1 questions (6-14 words each)
+- Use this exact Part 2 cue: "${chosenCue}"
+- 3 relevant Part 3 follow-up questions
+
+Return ONLY this JSON format:
+{
+  "part1": ["q1", "q2", "q3", "q4", "q5"],
+  "part2": ["${chosenCue}"],
+  "part3": ["q1", "q2", "q3"]
+}`
+
+    let response;
+    let retryCount = 0;
+    const maxRetries = 2;
+
+    // Retry logic for 503 errors
+    while (retryCount <= maxRetries) {
       try {
-        parsed = JSON.parse(jsonSubstring)
-      } catch {
-        console.warn("❌ Failed to parse Gemini JSON.")
+        console.log(`🔄 Attempt ${retryCount + 1} to generate questions...`)
+        
+        response = await ai.models.generateContent({
+          model: "gemini-2.0-flash",
+          contents: prompt,
+          config: {
+            temperature: 0.7,
+            maxOutputTokens: 500,
+          }
+        })
+
+        console.log("✅ AI questions generated successfully")
+        break; // Success, exit retry loop
+
+      } catch (error) {
+        retryCount++;
+        
+        if (error && retryCount <= maxRetries) {
+          console.log(`⏳ API overloaded, retrying in 2 seconds... (${retryCount}/${maxRetries})`)
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+          continue; // Retry
+        } else {
+          throw error; // Re-throw other errors or if max retries exceeded
+        }
       }
     }
 
-    // Validate shape
-    if (
-      parsed &&
-      Array.isArray(parsed.part1) &&
-      Array.isArray(parsed.part3) &&
-      parsed.part1.length === 5
-    ) {
-      parsed.part2 = [chosenCue]
-      parsed.part3 = parsed.part3.slice(0, 3)
-      return NextResponse.json(parsed, { status: 200 })
+    if (!response) {
+      throw new Error("Failed to get response after retries")
     }
 
-    // fallback otherwise
-    return NextResponse.json(fallbackQuestions(chosenCue), { status: 200 })
+    const generatedText = response.text
+    console.log("📝 AI Response:", generatedText)
+
+    if (!generatedText) {
+      throw new Error("Empty response from AI")
+    }
+
+    // Extract and parse JSON
+    const jsonMatch = generatedText.match(/\{[\s\S]*\}/)
+    if (jsonMatch) {
+      try {
+        const questions = JSON.parse(jsonMatch[0])
+        
+        // Validate structure
+        if (questions.part1 && 
+            Array.isArray(questions.part1) && 
+            questions.part1.length === 5 &&
+            questions.part3 && 
+            Array.isArray(questions.part3) && 
+            questions.part3.length === 3) {
+          
+          questions.part2 = [chosenCue] // Ensure correct part2
+          
+          // Cache the successful result
+          aiGeneratedQuestionsCache.set(chosenCue, questions)
+          console.log("💾 Cached AI-generated questions for:", chosenCue)
+          
+          console.log("🎯 Final AI-generated questions:", questions)
+          return NextResponse.json(questions)
+        }
+      } catch (parseError) {
+        console.warn("❌ JSON parse error:", parseError)
+      }
+    }
+
+    // If we get here, AI generation failed
+    throw new Error("AI response format invalid")
+
   } catch (err) {
-    console.error("❌ Error in /api/generate-questions:", err)
-    const fallback = fallbackQuestions(pickCueCard())
-    return NextResponse.json(fallback, { status: 200 })
+    console.error("❌ AI question generation failed:", err)
+    
+    const chosenCue = pickCueCard()
+    const fallback = getEnhancedFallbackQuestions(chosenCue)
+    
+    console.log("📦 Using enhanced fallback questions:", fallback)
+    return NextResponse.json(fallback)
   }
 }
