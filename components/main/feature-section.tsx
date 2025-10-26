@@ -133,6 +133,7 @@ export default function FeaturesSection() {
   return (
     <section
       ref={sectionRef}
+      id='features'
       className="features-section bg-gray-50 py-20 px-6 sm:px-10 md:px-20 text-center overflow-hidden"
     >
       <h1

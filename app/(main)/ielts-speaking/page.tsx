@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import IELTSSpeakingPage from "./_components/ielts-speaking-page";
+import IELTSSpeakingPage from "../_components/ielts-speaking-page";
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL!;
 
@@ -11,10 +11,7 @@ export const metadata: Metadata = {
     "ielts speaking practice",
     "ielts mock test",
     "ielts band score",
-    "ielts AI test",
-    "ielts feedback",
     "ielts speaking part 1 2 3",
-    "SpeakSmart AI",
     "ielts speaking mock test",
     "ielts speaking practice test",
     "ielts speaking test online",

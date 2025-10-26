@@ -1,11 +1,15 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { Menu, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Logo } from './logo'
-import { usePathname } from "next/navigation";
+import { usePathname } from 'next/navigation'
+import gsap from 'gsap'
+import { ScrollToPlugin } from 'gsap/ScrollToPlugin'
+import { useGSAP } from '@gsap/react'
 
+gsap.registerPlugin(ScrollToPlugin)
 
 const MENU_ITEMS = [
   { name: 'Home', href: '/' },
@@ -15,22 +19,45 @@ const MENU_ITEMS = [
 ]
 
 export const Header = () => {
-
   const [menuOpen, setMenuOpen] = useState(false)
   const [isScrolled, setIsScrolled] = useState(false)
+  const menuRef = useRef<HTMLDivElement | null>(null)
+  const pathname = usePathname()
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 50)
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
-  }, []);
+  }, [])
 
-  const pathname = usePathname();
-  
-  if (pathname.includes('/exam')) {
-    return null;
+  useGSAP(() => {
+      const menuEl = menuRef.current
+      if (!menuEl) return
+
+      if (menuOpen) {
+        gsap.fromTo(menuEl,
+          { y: -20, opacity: 0, display: 'none' },
+          { y: 0, opacity: 1, display: 'flex', duration: 0.2, ease: 'power3.out' }
+        )
+      } else {
+        gsap.to(menuEl, {y: -20,opacity: 0,duration: 0.2,ease: 'power2.in',
+          onComplete: () => {gsap.set(menuEl, { display: 'none' })},
+        })
+      }
+    },
+    { dependencies: [menuOpen] } 
+  )
+
+  if (pathname.includes('/exam')) return null
+
+  const handleScrollTo = (href: string) => {
+    if (!href.startsWith('#')) return
+    const target = document.querySelector(href)
+    if (target) {
+      gsap.to(window, { duration: 1, scrollTo: target, ease: 'power2.out' })
+      setMenuOpen(false)
+    }
   }
-
 
   return (
     <header className="fixed w-full z-20">
@@ -78,33 +105,33 @@ export const Header = () => {
               <ul className="flex gap-8 text-base tracking-tight font-medium">
                 {MENU_ITEMS.map((item, index) => (
                   <li key={index}>
-                    <Link
-                      href={item.href}
-                      className="text-gray-700 hover:text-black duration-150"
+                    <button
+                      onClick={() => handleScrollTo(item.href)}
+                      className="text-gray-700 hover:text-black duration-150 cursor-pointer"
                     >
                       {item.name}
-                    </Link>
+                    </button>
                   </li>
                 ))}
               </ul>
             </div>
 
-            {/* Mobile menu overlay */}
+            {/* Mobile menu overlay (animated) */}
             <div
+              ref={menuRef}
               className={cn(
-                'bg-background lg:hidden mb-6 hidden w-full flex-col rounded-3xl border p-6 shadow-2xl shadow-zinc-600/20',
-                menuOpen ? 'flex' : ''
+                'bg-background lg:hidden mb-6 hidden w-full flex-col rounded-3xl border p-6 shadow-2xl shadow-zinc-600/20'
               )}
             >
               <ul className="space-y-6 text-base">
                 {MENU_ITEMS.map((item, index) => (
                   <li key={index}>
-                    <Link
-                      href={item.href}
+                    <button
+                      onClick={() => handleScrollTo(item.href)}
                       className="text-muted-foreground hover:text-accent-foreground block duration-150"
                     >
                       {item.name}
-                    </Link>
+                    </button>
                   </li>
                 ))}
               </ul>

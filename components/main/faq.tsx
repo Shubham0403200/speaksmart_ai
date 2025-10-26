@@ -153,6 +153,7 @@ const FAQSection = () => {
   return (
     <section 
       ref={sectionRef}
+      id='faq'
       className="accordion-section relative max-w-5xl mx-auto py-20 px-6 sm:px-10"
     >
       <div

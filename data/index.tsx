@@ -71,3 +71,26 @@ export const steps = [
       "Download a detailed report and retry to track your improvement.",
   },
 ];
+
+export const PART2_CUE_LIST = [
+  "Describe an interesting traditional story",
+  "Describe a successful sportsperson you admire",
+  "Describe a talk you gave to a group of people",
+  "Describe a good habit your friend has, and you want to develop",
+  "Describe a time you saw something interesting on social media",
+  "Describe a time when you told your friend an important truth",
+  "Describe the time when you first talked in a foreign language",
+  "Describe a book you read that you found useful",
+  "Describe a time when someone apologized to you",
+  "Describe an occasion when you lost your way",
+  "Describe a time when you saw something in the sky (e.g. flying kites, birds, sunset, etc.)",
+  "Describe a place you went to and an outdoor activity you did there",
+  "Describe someone else's room you enjoy spending time in",
+  "Describe a singer whose music/songs you like",
+  "Describe a piece of technology you own that you feel is difficult to use",
+  "Describe a time when the electricity suddenly went off",
+  "Describe an exciting activity you have tried for the first time",
+  "Describe an important decision made with the help of other people",
+  "Describe a great dinner you and your friends or family members enjoyed",
+  "Describe a friend of yours who is good at music/singing"
+]

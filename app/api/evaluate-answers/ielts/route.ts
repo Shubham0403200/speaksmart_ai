@@ -1,110 +1,163 @@
-import { NextRequest, NextResponse } from "next/server"
-import { GoogleGenAI } from "@google/genai"
+import { NextRequest, NextResponse } from "next/server";
+import { PART2_CUE_LIST } from "@/data";
 
 export async function POST(req: NextRequest) {
   try {
-    const { question, userAnswer } = await req.json()
+    const { question, userAnswer } = await req.json();
 
-    console.log("🎯 Question:", question)
-    console.log("🗣️ User Answer:", userAnswer)
+    console.log("🎯 Question:", question);
+    console.log("🗣️ User Answer:", userAnswer);
 
     if (!question || !userAnswer) {
       return NextResponse.json(
         { error: "Missing question or userAnswer in request body." },
         { status: 400 }
-      )
+      );
     }
 
-    const GEMINI_API_KEY = process.env.GEMINI_API_KEY
-
-    if (!GEMINI_API_KEY) {
+    const GROQ_API_KEY = process.env.GROQ_API_KEY;
+    if (!GROQ_API_KEY) {
       return NextResponse.json(
-        { error: "Gemini API key not configured." },
+        { error: "GROQ API key not configured." },
         { status: 500 }
-      )
+      );
     }
 
-    const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY })
+    const endpoint = "https://api.groq.com/openai/v1/chat/completions";
+    const model = "llama-3.1-8b-instant";
 
-    const prompt = `
-You are an IELTS speaking examiner. Evaluate the given user answer for the provided IELTS speaking question.
-Provide:
-1️⃣ Band score (1-9) based on fluency, coherence, lexical resource, and grammatical range & accuracy.
-2️⃣ Feedback explaining why the answer got this band and how to improve it.
-3️⃣ A Band 9 model answer for this question.
+    // Check if question is Part 2
+    const isPart2 = PART2_CUE_LIST.some(cue =>
+      question.toLowerCase().includes(cue.toLowerCase())
+    );
 
-Format your response strictly as JSON with this structure:
+    // Prompt
+    const prompt = isPart2
+      ? `
+You are an IELTS Speaking examiner.
+Evaluate the user's Part 2 answer.
+1️⃣ Give a band score (1-9) based on fluency, coherence, vocabulary & grammar.
+2️⃣ Provide feedback in **1–2 lines**, highly relevant.
+3️⃣ Then provide a **Band 9 model answer** using the **ARE** method.
+4️⃣ Use this **Part 2 template** in the Band 9 answer:
+
+Introduction:
+‘Thank you for this interesting topic. I’d like to talk about ${question}, which is something I find quite [adjective]. It resonates with me because [personal connection]. Let me share my thoughts.’
+
+Main Body (1-1.5 minutes):
+1. Personal Connection:
+‘To begin with, this topic reminds me of [experience]. For instance, [example]. This shaped my perspective because [reason].’
+2. Broader Perspective:
+‘Beyond my personal experience, I believe ${question} is significant because [relevance]. For example, [general example].’
+3. Future Implications:
+‘Looking ahead, I think ${question} will continue to evolve. I hope to see [wish]. Personally, I would like to [goal/action] because [reason].’
+
+Conclusion:
+‘To sum up, ${question} is something I deeply value because [reason]. It has taught me [lesson], and I believe it will remain relevant. Thank you for letting me share my thoughts.’
+
+Return strictly as JSON:
 {
-  "band": 8,
-  "feedback": "Your feedback here...",
-  "band9_answer": "Your Band 9 model answer here..."
+  "band": <number>,
+  "feedback": "<short feedback>",
+  "band9_answer": "<model answer>"
 }
 
+User Answer: "${userAnswer}"
+`
+      : `
+You are an IELTS Speaking examiner.
+Evaluate the user's answer.
+1️⃣ Give a band score (1-9) based on fluency, coherence, vocabulary & grammar.
+2️⃣ Provide feedback in **1–2 lines**, highly relevant.
+3️⃣ Provide a Band 9 model answer using the ARE method: Answer → Reason → Example.
+Return strictly as JSON:
+{
+  "band": <number>,
+  "feedback": "<short feedback>",
+  "band9_answer": "<model answer>"
+}
 Question: "${question}"
 UserAnswer: "${userAnswer}"
-`
+`;
 
-    let response
-    let retryCount = 0
-    const maxRetries = 2
+    let retryCount = 0;
+    const maxRetries = 2;
+    let responseText: string | undefined;
 
-    // Retry logic for Gemini API overloads (503)
+    // -------- Retry Loop --------
     while (retryCount <= maxRetries) {
       try {
-        console.log(`🔄 Attempt ${retryCount + 1} to evaluate answer...`)
-        response = await ai.models.generateContent({
-          model: "gemini-2.0-flash",
-          contents: prompt,
-          config: {
-            temperature: 0.4,
-            maxOutputTokens: 400,
-          },
-        })
-        console.log("✅ AI evaluation successful")
-        break
-      } catch (error) {
-        retryCount++
-        console.warn(`⚠️ Evaluation attempt ${retryCount} failed:`, error)
+        retryCount++;
+        console.log(`🔄 Attempt ${retryCount} to evaluate answer...`);
 
-        if (retryCount <= maxRetries) {
-          console.log("⏳ Retrying in 2 seconds...")
-          await new Promise(resolve => setTimeout(resolve, 2000))
-        } else {
-          throw error
+        const response = await fetch(endpoint, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${GROQ_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model,
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.4,
+            max_tokens: 600,
+          }),
+        });
+
+        if (!response.ok) {
+          const text = await response.text();
+          throw { status: response.status, message: text };
         }
+
+        const json = await response.json();
+        responseText = json.choices?.[0]?.message?.content ?? json.text;
+
+        console.log("📝 Raw GROQ Response:", responseText);
+        break;
+      } catch (err: unknown) {
+        console.warn(`⚠️ Evaluation attempt ${retryCount} failed:`, err);
+
+        const status = (err as unknown);
+        if (retryCount > maxRetries || status === 429) {
+          console.log("📦 Using fallback: rate-limit or retries exceeded.");
+          return NextResponse.json(
+            { error: "Evaluation API limit reached. Please try again later." },
+            { status: 503 }
+          );
+        }
+        // Wait before retry
+        await new Promise(res => setTimeout(res, 2000 * retryCount));
       }
     }
 
-    if (!response) {
-      throw new Error("No response from Gemini after retries.")
+    if (!responseText) throw new Error("No valid response from GROQ.");
+
+    // -------- Safe JSON parsing --------
+    const match = responseText.match(/\{[\s\S]*\}/);
+    if (!match) throw new Error("Response JSON extraction failed.");
+
+    let parsed;
+    try {
+      const cleaned = match[0]
+        .replace(/\n/g, " ")
+        .replace(/\r/g, " ")
+        .replace(/\\+/g, "")
+        .replace(/(\r\n|\n|\r)/gm, " ");
+      parsed = JSON.parse(cleaned);
+    } catch (err) {
+      console.error("❌ JSON parse failed after cleaning:", err);
+      throw new Error("Failed to parse AI response JSON.");
     }
 
-    const aiText = response.text
-    console.log("📝 Raw AI Response:", aiText)
+    const { band, feedback, band9_answer } = parsed;
 
-    if (!aiText) {
-      throw new Error("Empty response from Gemini.")
-    }
-
-    // Extract JSON from Gemini’s output
-    const jsonMatch = aiText.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) {
-      throw new Error("AI response does not contain valid JSON.")
-    }
-
-    const parsed = JSON.parse(jsonMatch[0])
-
-    if (
-      typeof parsed.band === "number" &&
-      parsed.feedback &&
-      parsed.band9_answer
-    ) {
-      return NextResponse.json(parsed, { status: 200 })
+    if (typeof band === "number" && typeof feedback === "string" && typeof band9_answer === "string") {
+      return NextResponse.json({ band, feedback, band9_answer }, { status: 200 });
     } else {
-      throw new Error("AI JSON missing required fields.")
+      throw new Error("Parsed JSON missing required fields.");
     }
   } catch (err) {
-    console.log("❌ Error in /api/evaluate-answers/ielts:", err)
-    return NextResponse.json({ error: "Failed to evaluate answer." }, { status: 500 })
+    console.error("❌ Error in /api/evaluate-answers/ielts:", err);
+    return NextResponse.json({ error: "Failed to evaluate answer." }, { status: 500 });
   }
 }

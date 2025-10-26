@@ -8,6 +8,7 @@ import { steps } from "@/data";
 gsap.registerPlugin(ScrollTrigger);
 
 export default function HowItWorks() {
+  
   const sectionRef = useRef<HTMLElement>(null);
   const stepsRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -162,6 +163,7 @@ export default function HowItWorks() {
 
   return (
     <section 
+      id='how'
       ref={sectionRef}
       className="how-section py-20 bg-gradient-to-b from-white to-gray-50"
     >
