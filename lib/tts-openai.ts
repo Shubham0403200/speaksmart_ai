@@ -15,7 +15,6 @@
 //   window.speechSynthesis.speak(utterance);
 // };
 
-
 export const speakText = (text: string, onEnd?: () => void) => {
   if (!text) return;
 
@@ -50,15 +49,10 @@ export const speakText = (text: string, onEnd?: () => void) => {
   }
 };
 
-// utils/checkMicrophoneAccess.ts
 export async function checkMicrophoneAccess(): Promise<boolean> {
   try {
-    // Request access
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-    // Immediately stop tracks to free mic
-    stream.getTracks().forEach(track => track.stop());
-
+    stream.getTracks().forEach((track) => track.stop());
     console.log("✅ Microphone permission granted");
     return true;
   } catch (err) {

@@ -1,9 +1,11 @@
 "use client";
-import React, { useRef, useCallback } from "react";
+import React, { useRef, useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { useGSAP } from "@gsap/react";
+import { MicPermissionDialog } from "@/components/main/mic-permission-dialog";
 import gsap from "gsap";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface IELTSSpeakingPageProps {
   baseUrl: string;
@@ -27,9 +29,10 @@ const IELTSSpeakingPage: React.FC<IELTSSpeakingPageProps> = ({ baseUrl }) => {
   // Refs with proper typing
   const titleRef = useRef<HTMLHeadingElement>(null);
   const sectionsRef = useRef<(HTMLElement | null)[]>([]);
-  const buttonRef = useRef<HTMLAnchorElement>(null);
-
-  // Animation logic
+  const buttonRef = useRef<HTMLDivElement>(null);
+  const [showDialog, setShowDialog] = useState(false);
+  const router = useRouter();
+  
   useGSAP(() => {
     const timeline = gsap.timeline({
       defaults: { 
@@ -76,6 +79,25 @@ const IELTSSpeakingPage: React.FC<IELTSSpeakingPageProps> = ({ baseUrl }) => {
       description: "Take an AI-powered IELTS Speaking Test and receive instant feedback, band score, and downloadable performance report.",
       url: `${baseUrl}/ielts-speaking`,
     },
+  };
+
+   const handleAllowMic = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => track.stop());
+      sessionStorage.setItem("allowSpeech", "true");
+      setShowDialog(false);
+      router.push("/ielts-speaking/exam");
+    } catch (err) {
+      console.error("❌ Microphone access denied:", err);
+      toast.warning("Please allow microphone access in Safari Settings → Site Settings → Microphone.");
+      setShowDialog(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setShowDialog(false);
+    toast.error('Access Needed.');
   };
 
   return (
@@ -169,22 +191,33 @@ const IELTSSpeakingPage: React.FC<IELTSSpeakingPageProps> = ({ baseUrl }) => {
 
         {/* CTA Section */}
         <section className="text-center">
-          <Link ref={buttonRef} href="/ielts-speaking/exam">
-            <Button 
-              className="w-full md:w-fit"
-              aria-label="Start IELTS Speaking Test"
-                onClick={() => {
-                  sessionStorage.setItem("allowSpeech", "true");
-                }}
-            >
-              🚀 Start IELTS Speaking Test
-            </Button>
-          </Link>
+          <div ref={buttonRef}> 
+              <Button 
+                className="w-full md:w-fit"
+                aria-label="Start IELTS Speaking Test"
+                  onClick={() => setShowDialog(true)}
+              >
+                🚀 Start IELTS Speaking Test
+              </Button>
+          </div>
           <p className="text-xs sm:text-sm text-gray-500 mt-4">
             Powered by <strong>SpeakSmart AI</strong> — Your Personal IELTS
             Speaking Coach.
           </p>
         </section>
+
+        { showDialog && ( 
+          <MicPermissionDialog 
+            title='🎤 Allow Microphone Access'
+            description='We need access to your microphone to record your IELTS Speaking answers.  
+              Please tap  to continue'
+            open={showDialog}
+            onOpenChange={setShowDialog}
+            buttonText="Allow"
+            onClick={handleAllowMic}
+            onCancel={handleCancel}
+          />
+        )}
 
         {/* Structured Data */}
         <script

@@ -9,3 +9,10 @@ export interface IELTSQuestions {
   part2?: string[];
   part3?: string[];
 }
+
+export interface AnswerRecord {
+  question: string;
+  userAnswer: string;
+  feedback: string;
+  band9Answer: string;
+}
