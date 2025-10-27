@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { playfair } from "./logo";
 import { PauseIcon, PlayIcon } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
+import { HeroHighlight } from "./hero-highlight";
 
 export default function HeroSection() {
   const [isPlayed, setIsPlayed] = useState<boolean>(false);
@@ -98,81 +99,83 @@ export default function HeroSection() {
   }, []);
 
   return (
-    <section className="relative min-h-screen bg-white flex flex-col md:flex-row items-center justify-center px-5 sm:px-8 md:px-16 gap-10 overflow-hidden mx-auto max-w-7xl py-12">
+    <HeroHighlight>
+      <section className="relative min-h-[85vh] flex flex-col md:flex-row items-center justify-center px-5 sm:px-8 md:px-16 gap-10 overflow-hidden mx-auto max-w-7xl py-12">
 
-      {/* Left Text Section */}
-      <div className="flex-1 text-center md:text-left space-y-6 mt-20 md:mt-0">
-        <h1 className="hero-h1 text-5xl md:text-6xl font-extrabold leading-tighter text-gray-900 bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500">
-          Practice. <br />
-          <span className={cn("font-semibold tracking-tight text-3xl md:text-4xl", playfair.className)}>Perfect. Perform.</span>
-        </h1>
+        {/* Left Text Section */}
+        <div className="flex-1 text-center md:text-left space-y-6 mt-20 md:mt-0">
+          <h1 className="hero-h1 text-5xl md:text-6xl font-extrabold leading-tighter text-gray-900 bg-clip-text bg-gradient-to-r from-purple-600 to-blue-500">
+            Practice. <br />
+            <span className={cn("font-semibold tracking-tight text-3xl md:text-4xl", playfair.className)}>Perfect. Perform.</span>
+          </h1>
 
-        <p className="hero-p text-gray-600 max-w-md sm:max-w-xl text-xs sm:text-sm md:text-base mx-auto md:mx-0">
-          SpeakSmart AI helps you ace your IELTS speaking test and job interviews with instant feedback, realistic practice questions, and performance tracking. No Login required.
-        </p>
+          <p className="hero-p text-gray-600 max-w-md sm:max-w-xl text-xs sm:text-sm md:text-base mx-auto md:mx-0">
+            SpeakSmart AI helps you ace your IELTS speaking test and job interviews with instant feedback, realistic practice questions, and performance tracking. <span className="italic font-medium"> No Login required. </span> 
+          </p>
 
-        <div className="hero-buttons flex flex-col sm:flex-row  justify-center md:justify-start gap-3 sm:gap-4 w-full sm:w-auto">
-          <Link href='/ielts-speaking'>
-            <Button
-              className="bg-black text-white hover:bg-gray-800 hover:scale-105 transition-transform w-full sm:w-auto rounded-full px-5 py-3 text-xs md:text-sm shadow-lg"
-            >
-              Start IELTS Practice
-            </Button>
-          </Link>
-          <Link href='/job-interview'>
-            <Button
-              variant="outline"
-              className="w-full sm:w-auto rounded-full px-5 py-3 text-xs md:text-sm border-gray-300 hover:border-gray-800 hover:text-gray-900 hover:scale-105 transition-transform"
-            >
-              Try Interview Mode
-            </Button>
-          </Link>
-        </div>
-      </div>
-
-      {/* Right Card Section */}
-      <div className="flex-1 flex justify-center hero-card">
-        <Card className="max-w-sm sm:max-w-md w-full shadow-2xl border border-gray-100 bg-white/70 backdrop-blur-md rounded-2xl transition-transform hover:scale-105 hover:shadow-2xl">
-          <CardContent className="p-4 sm:p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-r from-purple-600 to-blue-500 flex items-center justify-center text-white font-semibold text-base sm:text-lg shadow-lg transition-transform hover:scale-105">
-                SS
-              </div>
-              <div>
-                <h3 className="font-bold text-sm sm:text-base">Instant Speaking Feedback</h3>
-                <p className="text-xs sm:text-sm text-gray-500 italic">
-                  Record answers, get a band estimate and tips.
-                </p>
-              </div>
-            </div>
-
-            <p className="text-xs sm:text-sm text-gray-700 mb-5">
-              <span className="font-medium">Sample question:</span> Describe a Natural Place. You should say: where you went, who you went with, what you did, and explain why it was memorable.
-            </p>
-
-            <div className="flex gap-x-3 items-center w-full">
-              <Button onClick={handleClick} variant="outline" className="rounded-xl transition-transform flex items-center gap-x-1 text-xs md:text-sm">
-                { isPlayed ? (
-                  <>
-                    <PauseIcon className='w-4 h-4' />
-                    Pause
-                  </>
-                )  : (
-                  <>                  
-                    <PlayIcon className='w-4 h-4' />
-                    Play
-                  </>
-                )}
+          <div className="hero-buttons flex flex-col sm:flex-row  justify-center md:justify-start gap-3 sm:gap-4 w-full sm:w-auto">
+            <Link href='/ielts-speaking'>
+              <Button
+                className="bg-black text-white hover:bg-gray-800 hover:scale-105 transition-transform w-full sm:w-auto rounded-full px-5 py-3 text-xs md:text-sm shadow-lg"
+              >
+                Start IELTS Practice
               </Button>
-              <Link href='/ielts-speaking'>
-                <Button className="transition-transform text-xs md:text-sm rounded-xl">
-                  Practice Now
+            </Link>
+            <Link href='/job-interview'>
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto rounded-full px-5 py-3 text-xs md:text-sm border-gray-300 hover:border-gray-800 hover:text-gray-900 hover:scale-105 transition-transform"
+              >
+                Try Interview Mode
+              </Button>
+            </Link>
+          </div>
+        </div>
+
+        {/* Right Card Section */}
+        <div className="flex-1 flex justify-center hero-card">
+          <Card className="max-w-sm sm:max-w-md w-full shadow-2xl border border-gray-100 bg-white/70 backdrop-blur-md rounded-2xl transition-transform hover:scale-105 hover:shadow-2xl">
+            <CardContent className="p-4 sm:p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-r from-purple-600 to-blue-500 flex items-center justify-center text-white font-semibold text-base sm:text-lg shadow-lg transition-transform hover:scale-105">
+                  SS
+                </div>
+                <div>
+                  <h3 className="font-bold text-sm sm:text-base">Instant Speaking Feedback</h3>
+                  <p className="text-xs sm:text-sm text-gray-500 italic">
+                    Record answers, get a band estimate and tips.
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-xs sm:text-sm text-gray-700 mb-5">
+                <span className="font-medium">Sample question:</span> Describe a Natural Place. You should say: where you went, who you went with, what you did, and explain why it was memorable.
+              </p>
+
+              <div className="flex gap-x-3 items-center w-full">
+                <Button onClick={handleClick} variant="outline" className="rounded-xl transition-transform flex items-center gap-x-1 text-xs md:text-sm">
+                  { isPlayed ? (
+                    <>
+                      <PauseIcon className='w-4 h-4' />
+                      Pause
+                    </>
+                  )  : (
+                    <>                  
+                      <PlayIcon className='w-4 h-4' />
+                      Play
+                    </>
+                  )}
                 </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    </section>
+                <Link href='/ielts-speaking'>
+                  <Button className="transition-transform text-xs md:text-sm rounded-xl">
+                    Practice Now
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+    </HeroHighlight>
   );
 }

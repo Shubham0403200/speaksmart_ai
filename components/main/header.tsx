@@ -60,7 +60,7 @@ export const Header = () => {
   }
 
   return (
-    <header className="fixed w-full z-20">
+    <header className="fixed w-full z-21">
       <nav
         data-state={menuOpen ? 'active' : undefined}
         className="w-full group transition-all duration-300"

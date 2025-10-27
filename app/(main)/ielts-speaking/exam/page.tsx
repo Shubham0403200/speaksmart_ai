@@ -7,6 +7,9 @@ import { speakText } from "@/lib/tts-openai";
 import { EvaluationResult, IELTSQuestions } from "@/components/interface";
 import jsPDF from "jspdf";
 import Link from "next/link";
+import { checkMicrophoneAccess } from "@/lib/tts-openai";
+import { useRouter } from "next/navigation";
+
 
 interface AnswerRecord {
   question: string;
@@ -28,6 +31,27 @@ const IELTSExamPage = () => {
 
   const hasFetched = useRef(false);
   const { transcript, listening, resetTranscript } = useSpeechRecognition();
+
+  const router = useRouter();
+
+// Run mic check before fetching questions
+  useEffect(() => {
+    const verifyPermissions = async () => {
+      const hasMicAccess = await checkMicrophoneAccess();
+
+      if (!hasMicAccess) {
+        alert("🎙️ Microphone access is required to take the Speaking Test. Please allow mic permission and try again.");
+        router.push("/ielts-speaking"); // send them back
+        return;
+      }
+
+      // If mic access granted, mark that speech can start
+      sessionStorage.setItem("allowSpeech", "true");
+    };
+
+    verifyPermissions();
+  }, [router]);
+
 
   // -------- STEP 1: Fetch questions --------
   useEffect(() => {
@@ -55,12 +79,16 @@ const IELTSExamPage = () => {
 
   // -------- STEP 2: Speak first question automatically --------
   useEffect(() => {
-    if (!isLoading && questions.part1 && questions.part1.length > 0) {
-      const firstQuestion = questions.part1[0];
-      playQuestion(firstQuestion);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, questions]);
+  const canSpeak = sessionStorage.getItem("allowSpeech");
+
+  if (canSpeak && !isLoading && questions?.part1 && questions?.part1?.length > 0) {
+    const firstQuestion = questions?.part1[0];
+    // Small timeout to ensure voices load
+    setTimeout(() => playQuestion(firstQuestion), 500);
+    sessionStorage.removeItem("allowSpeech");
+  }
+  // eslint-disable-next-line 
+}, [isLoading, questions]);
 
   // -------- STEP 3: Convert question to audio + start listening --------
   const playQuestion = (text: string) => {
