@@ -16,3 +16,9 @@ export interface AnswerRecord {
   feedback: string;
   band9Answer: string;
 }
+
+export interface EvaluationJobResult {
+  score: number;
+  feedback: string;
+  good_response: string;
+}

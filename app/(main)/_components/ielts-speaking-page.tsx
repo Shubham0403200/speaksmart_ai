@@ -81,24 +81,39 @@ const IELTSSpeakingPage: React.FC<IELTSSpeakingPageProps> = ({ baseUrl }) => {
     },
   };
 
-   const handleAllowMic = async () => {
+    const handleAllowMic = async () => {
     try {
+    
+      const ua: string = navigator.userAgent || (navigator.vendor ?? "") || (typeof window !== "undefined" && "opera" in window ? "opera" : "");
+      
+      const isIOS = /iPad|iPhone|iPod/.test(ua);
+      const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+
+      if (isIOS || isSafari)  {
+        toast.info("🚧 Still under development for iOS / Safari devices.");
+        setShowDialog(false);
+        return;
+      }
+
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach(track => track.stop());
+      stream.getTracks().forEach((track) => track.stop());
+
       sessionStorage.setItem("allowSpeech", "true");
       setShowDialog(false);
       router.push("/ielts-speaking/exam");
     } catch (err) {
       console.error("❌ Microphone access denied:", err);
-      toast.warning("Please allow microphone access in Safari Settings → Site Settings → Microphone.");
+      toast.warning(
+        "Please allow microphone access in browser settings before starting the test."
+      );
       setShowDialog(false);
     }
   };
 
-  const handleCancel = () => {
-    setShowDialog(false);
-    toast.error('Access Needed.');
-  };
+    const handleCancel = () => {
+      setShowDialog(false);
+      toast.error('Access Needed.');
+    };
 
   return (
       <main className="max-w-5xl mx-auto px-6 py-12 mt-24 text-gray-800">

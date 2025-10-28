@@ -8,12 +8,17 @@ export const metadata: Metadata = {
   description:
     "Prepare for job interviews with SpeakSmart AI. Practice common interview questions, receive instant AI feedback, personalized tips, and downloadable performance reports.",
   keywords: [
+    'job interview prep',
+    'job interview prep using ai',
+    'job interview prep ai',
     "job interview preparation",
+    "interview preparation",
+    "interview preparation ai",
+    "interview preparation using ai",
     "AI interview practice",
     "mock interview",
     "interview questions",
     "interview tips",
-    "SpeakSmart AI",
     "interview feedback",
     "AI career coach",
     "job interview online practice",

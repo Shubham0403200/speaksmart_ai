@@ -1,9 +1,11 @@
 "use client";
-import React, { useRef, useCallback } from "react";
+import React, { useRef, useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
-import Link from "next/link";
 import { useGSAP } from "@gsap/react";
 import gsap from "gsap";
+import { toast } from "sonner";
+import { MicPermissionDialog } from "@/components/main/mic-permission-dialog";
+import { useRouter } from "next/navigation";
 
 interface JobInterviewPageProps {
   baseUrl: string;
@@ -25,12 +27,17 @@ const SCHEMA_CONFIG = {
 } as const;
 
 const JobInterviewPage: React.FC<JobInterviewPageProps> = ({ baseUrl }) => {
-  // Refs with proper typing
+
   const titleRef = useRef<HTMLHeadingElement>(null);
   const sectionsRef = useRef<(HTMLElement | null)[]>([]);
-  const buttonRef = useRef<HTMLAnchorElement>(null);
-
-  // Animation logic
+  const buttonRef = useRef<HTMLDivElement>(null);
+  
+  const [showDialog, setShowDialog] = useState(false);
+  const [selectedField, setSelectedField] = useState("");
+  const [customTopic, setCustomTopic] = useState("");
+  
+  const router = useRouter();
+  
   useGSAP(() => {
     const timeline = gsap.timeline({
       defaults: { 
@@ -65,6 +72,52 @@ const JobInterviewPage: React.FC<JobInterviewPageProps> = ({ baseUrl }) => {
       url: `${baseUrl}/job-interview`,
     },
   };
+
+    const handleAllowMic = async () => {
+      try {
+      
+        const ua: string = navigator.userAgent || (navigator.vendor ?? "") || (typeof window !== "undefined" && "opera" in window ? "opera" : "");
+        
+        const isIOS = /iPad|iPhone|iPod/.test(ua);
+        const isSafari = /^((?!chrome|android).)*safari/i.test(ua);
+
+        if (isIOS || isSafari)  {
+          toast.info("🚧 Still under development for iOS / Safari devices.");
+          setShowDialog(false);
+          return;
+        }
+
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach((track) => track.stop());
+
+         const topic =
+        selectedField === "Other" && customTopic
+          ? customTopic
+          : selectedField;
+
+        if (!topic) {
+          toast.warning("Please select or enter a field before starting.");
+          return;
+        }
+        
+        sessionStorage.setItem("allowSpeech", "true");
+        sessionStorage.setItem("userField", topic);
+        setShowDialog(false);
+        router.push("/job-interview/exam");
+      } catch (err) {
+        console.error("❌ Microphone access denied:", err);
+        toast.warning(
+          "Please allow microphone access in browser settings before starting the test."
+        );
+        setShowDialog(false);
+      }
+    };
+
+      const handleCancel = () => {
+        setShowDialog(false);
+        toast.error('Access Needed.');
+      };
+
 
   return (
     <main className="max-w-5xl mx-auto px-6 py-12 mt-24 text-gray-800">
@@ -135,20 +188,65 @@ const JobInterviewPage: React.FC<JobInterviewPageProps> = ({ baseUrl }) => {
         </ol>
       </section>
 
+      <section
+        ref={setSectionRef(1)}
+        className="bg-white shadow-md rounded-2xl p-4 md:p-6 mb-8 border border-gray-100"
+      >
+        <h2 className="text-base md:text-xl font-semibold mb-3">🎓 Select Your Field</h2>
+        <select
+          className="w-full border text-xs md:text-sm cursor-pointer border-gray-300 rounded-md p-1 md:p-2 text-gray-700 focus:ring-2 focus:ring-blue-500"
+          value={selectedField}
+          onChange={(e) => setSelectedField(e.target.value)}
+        >
+          <option value="">-- Select your field --</option>
+          <option value="Software Engineering">Software Engineering</option>
+          <option value="Marketing & Sales">Marketing & Sales</option>
+          <option value="Finance & Accounting">Finance & Accounting</option>
+          <option value="Human Resources">Human Resources</option>
+          <option value="Operations & Logistics">Operations & Logistics</option>
+          <option value="Design & Creative">Design & Creative</option>
+          <option value="Other">Other</option>
+        </select>
+         {selectedField === "Other" && (
+          <input
+            type="text"
+            placeholder="Enter your custom topic..."
+            value={customTopic}
+            onChange={(e) => setCustomTopic(e.target.value)}
+            className="w-full mt-3 border text-xs md:text-sm border-gray-300 rounded-md p-1.5 md:p-2 text-gray-700 focus:ring-2 focus:ring-blue-500"
+          />
+        )}
+        <p className="text-xs text-gray-500 mt-2">Your interview questions will be customized accordingly.</p>
+      </section>
+
       {/* CTA Section */}
       <section className="text-center">
-        <Link ref={buttonRef} href="/job-interview/exam">
+        <div ref={buttonRef}>
           <Button 
             className="w-full md:w-fit"
             aria-label="Start AI Job Interview Practice"
+            onClick={() => setShowDialog(true)}
           >
             🚀 Start AI Job Interview Practice
           </Button>
-        </Link>
+        </div>
         <p className="text-xs sm:text-sm text-gray-500 mt-4">
           Powered by <strong>SpeakSmart AI</strong> — Your Personal Interview Coach.
         </p>
       </section>
+
+       { showDialog && ( 
+          <MicPermissionDialog 
+            title='🎤 Allow Microphone Access'
+            description='We need access to your microphone to record your Job Interview answers.  
+              Please tap  to continue'
+            open={showDialog}
+            onOpenChange={setShowDialog}
+            buttonText="Allow"
+            onClick={handleAllowMic}
+            onCancel={handleCancel}
+          />
+        )}
 
       {/* Structured Data */}
       <script

@@ -9,6 +9,7 @@ import Link from "next/link";
 gsap.registerPlugin(ScrollTrigger);
 
 export default function FeaturesSection() {
+  
   const sectionRef = useRef<HTMLElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);

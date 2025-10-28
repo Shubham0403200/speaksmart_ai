@@ -14,12 +14,9 @@ export default function HeroSection() {
   const [isPlayed, setIsPlayed] = useState<boolean>(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Initialize audio element
   useEffect(() => {
     audioRef.current = new Audio('/audio/natural_place.mp3');
     audioRef.current.preload = "auto";
-
-    // Cleanup on component unmount
     return () => {
       if (audioRef.current) {
         audioRef.current.pause();
@@ -45,7 +42,6 @@ export default function HeroSection() {
     }
   };
 
-  // Handle audio ended event
   useEffect(() => {
     if (!audioRef.current) return;
 

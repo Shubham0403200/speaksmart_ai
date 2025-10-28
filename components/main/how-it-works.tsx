@@ -1,14 +1,13 @@
 "use client";
-import { useRef, useEffect } from 'react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useRef, useEffect } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { Card, CardContent } from "@/components/ui/card";
 import { steps } from "@/data";
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function HowItWorks() {
-  
   const sectionRef = useRef<HTMLElement>(null);
   const stepsRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -16,12 +15,10 @@ export default function HowItWorks() {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Section entrance animation
-      gsap.fromTo(sectionRef.current, 
-        {
-          opacity: 0,
-          y: 50
-        },
+      // Section Animation
+      gsap.fromTo(
+        sectionRef.current,
+        { opacity: 0, y: 50 },
         {
           opacity: 1,
           y: 0,
@@ -31,17 +28,15 @@ export default function HowItWorks() {
             trigger: sectionRef.current,
             start: "top 95%",
             end: "bottom 95%",
-            toggleActions: "play none none reverse"
-          }
+            toggleActions: "play none none reverse",
+          },
         }
       );
 
       // Title animation
-      gsap.fromTo(titleRef.current,
-        {
-          opacity: 0,
-          y: 30
-        },
+      gsap.fromTo(
+        titleRef.current,
+        { opacity: 0, y: 30 },
         {
           opacity: 1,
           y: 0,
@@ -52,17 +47,15 @@ export default function HowItWorks() {
             trigger: sectionRef.current,
             start: "top 90%",
             end: "bottom 95%",
-            toggleActions: "play none none reverse"
-          }
+            toggleActions: "play none none reverse",
+          },
         }
       );
 
       // Description animation
-      gsap.fromTo(descRef.current,
-        {
-          opacity: 0,
-          y: 20
-        },
+      gsap.fromTo(
+        descRef.current,
+        { opacity: 0, y: 20 },
         {
           opacity: 1,
           y: 0,
@@ -73,16 +66,17 @@ export default function HowItWorks() {
             trigger: sectionRef.current,
             start: "top 85%",
             end: "bottom 95%",
-            toggleActions: "play none none reverse"
-          }
+            toggleActions: "play none none reverse",
+          },
         }
       );
 
       // Steps staggered animation - horizontal slide for desktop, vertical for mobile
-      gsap.fromTo(".how-step",
+      gsap.fromTo(
+        ".how-step",
         {
           opacity: 0,
-          x: index => {
+          x: (index) => {
             // For desktop: alternate left/right slide
             if (window.innerWidth >= 768) {
               return index % 2 === 0 ? -60 : 60;
@@ -90,13 +84,13 @@ export default function HowItWorks() {
             // For mobile: slide up from bottom
             return 0;
           },
-          y: index => {
+          y: (index) => {
             if (window.innerWidth < 768) {
               return 60;
             }
             return 0;
           },
-          scale: 0.8
+          scale: 0.8,
         },
         {
           opacity: 1,
@@ -110,16 +104,17 @@ export default function HowItWorks() {
             trigger: stepsRef.current,
             start: "top 80%",
             end: "bottom 95%",
-            toggleActions: "play none none reverse"
-          }
+            toggleActions: "play none none reverse",
+          },
         }
       );
 
       // Icon animation with bounce effect
-      gsap.fromTo(".how-step .bg-indigo-50",
+      gsap.fromTo(
+        ".how-step .bg-indigo-50",
         {
           scale: 0,
-          rotation: -90
+          rotation: -90,
         },
         {
           scale: 1,
@@ -131,16 +126,17 @@ export default function HowItWorks() {
             trigger: stepsRef.current,
             start: "top 75%",
             end: "bottom 95%",
-            toggleActions: "play none none reverse"
-          }
+            toggleActions: "play none none reverse",
+          },
         }
       );
 
       // Sequential text reveal for step content
-      gsap.fromTo(".how-step h3, .how-step p",
+      gsap.fromTo(
+        ".how-step h3, .how-step p",
         {
           opacity: 0,
-          y: 20
+          y: 20,
         },
         {
           opacity: 1,
@@ -151,30 +147,29 @@ export default function HowItWorks() {
             trigger: stepsRef.current,
             start: "top 70%",
             end: "bottom 95%",
-            toggleActions: "play none none reverse"
-          }
+            toggleActions: "play none none reverse",
+          },
         }
       );
-
     });
 
     return () => ctx.revert(); // Cleanup
   }, []);
 
   return (
-    <section 
-      id='how'
+    <section
+      id="how"
       ref={sectionRef}
       className="how-section py-20 bg-gradient-to-b from-white to-gray-50"
     >
       <div className="max-w-6xl mx-auto px-6 text-center">
-        <h2 
+        <h2
           ref={titleRef}
           className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 mb-4"
         >
           How SpeakSmart AI Works
         </h2>
-        <p 
+        <p
           ref={descRef}
           className="text-gray-600 max-w-2xl mx-auto mb-12 text-xs sm:text-sm md:text-base"
         >
@@ -182,7 +177,7 @@ export default function HowItWorks() {
           recording to personalized evaluation in just a few seconds.
         </p>
 
-        <div 
+        <div
           ref={stepsRef}
           className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-4"
         >
@@ -195,8 +190,12 @@ export default function HowItWorks() {
                 {step.icon}
               </div>
               <CardContent className="p-0">
-                <h3 className="text-base md:text-xl font-semibold mb-1">{step.title}</h3>
-                <p className="text-gray-600 text-xs md:text-sm">{step.description}</p>
+                <h3 className="text-base md:text-xl font-semibold mb-1">
+                  {step.title}
+                </h3>
+                <p className="text-gray-600 text-xs md:text-sm">
+                  {step.description}
+                </p>
               </CardContent>
             </Card>
           ))}
