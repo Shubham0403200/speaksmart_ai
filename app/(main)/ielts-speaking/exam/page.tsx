@@ -267,7 +267,7 @@ const IELTSExamPage = () => {
 
         {showDownloadBtn && (
           <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-center">
-            <DownloadFeedbackPDF allAnswers={allAnswers} />
+            <DownloadFeedbackPDF allAnswers={allAnswers} title="IELTS Speaking Test Feedback" fileName="ielts_speaking_feedback.pdf" />
             <Link href='/'>
               <Button className="bg-cyan-600 hover:bg-cyan-700 text-white">
                 Go To Home

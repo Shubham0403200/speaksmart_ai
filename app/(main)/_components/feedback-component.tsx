@@ -12,7 +12,6 @@ const FeedbackComponent = () => {
   const sectionRef = useRef<HTMLDivElement | null>(null);
 
   useGSAP(() => {
-    
     const feedback = sectionRef.current?.querySelector(".feedback-card");
     const demo = sectionRef.current?.querySelector(".demo-card");
 

@@ -32,7 +32,6 @@ const SpeakingExamPage = () => {
   useEffect(() => {
     const verifySetup = async () => {
       const userTopic = sessionStorage.getItem("userTopic");
-      console.log("userTopic: ", userTopic);
 
       if (!userTopic) {
         toast.error("Please select your topic before starting the chat!.");
@@ -208,7 +207,7 @@ const SpeakingExamPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-b from-white via-gray-50 to-gray-100 flex flex-col items-center p-6">
       <h1 className="text-3xl font-semibold mb-6 text-gray-800">
-        AI Job Interview Practice
+        AI Speaking & Communication Exam
       </h1>
 
       <div className="bg-white shadow-xl rounded-2xl p-6 w-full max-w-2xl text-center border border-gray-100">
@@ -281,7 +280,7 @@ const SpeakingExamPage = () => {
 
         {showDownloadBtn && (
           <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-center">
-            <DownloadFeedbackPDF allAnswers={allAnswers} />
+            <DownloadFeedbackPDF allAnswers={allAnswers} title="AI Speaking & Communication Feedback" fileName="speaking_feedback.pdf" />
             <Link href="/">
               <Button className="bg-cyan-600 hover:bg-cyan-700 text-white">
                 Go To Home

@@ -74,7 +74,6 @@ const questionCache = new Map<string, string[]>();
 export async function POST(req: NextRequest) {
   try {
     const { topic } = await req.json();
-    console.log("🗣️ User topic:", topic);
 
     if (!topic || topic.trim().length === 0) {
       return NextResponse.json(
@@ -87,13 +86,11 @@ export async function POST(req: NextRequest) {
 
     // ✅ Use cache if available
     if (questionCache.has(topicKey)) {
-      console.log("♻️ Using cached speaking questions for:", topicKey);
       return NextResponse.json({ questions: questionCache.get(topicKey) });
     }
 
     // ⚠️ Fallback if API key missing
     if (!GROQ_API_KEY) {
-      console.log("⚠️ Missing GROQ_API_KEY — using fallback questions");
       const fallback = getFallbackQuestions(topicKey);
       questionCache.set(topicKey, fallback);
       return NextResponse.json({ questions: fallback });
@@ -119,8 +116,6 @@ Return ONLY this valid JSON:
 
     while (retryCount <= maxRetries) {
       try {
-        console.log(`🔄 Generating speaking questions for "${topic}" (Attempt ${retryCount + 1})`);
-
         const completion = await groq.chat.completions.create({
           model,
           messages: [{ role: "user", content: prompt }],
@@ -136,7 +131,6 @@ Return ONLY this valid JSON:
 
         if (data?.questions?.length >= 10) {
           questionCache.set(topicKey, data.questions);
-          console.log(`✅ Generated and cached ${data.questions.length} questions for "${topic}"`);
           return NextResponse.json(data);
         }
 
@@ -146,7 +140,6 @@ Return ONLY this valid JSON:
         console.log(`⚠️ Error attempt ${retryCount}/${maxRetries}: ${err}`);
 
         if (retryCount > maxRetries) {
-          console.log("📦 Using fallback questions after retries");
           const fallback = getFallbackQuestions(topicKey);
           questionCache.set(topicKey, fallback);
           return NextResponse.json({ questions: fallback });

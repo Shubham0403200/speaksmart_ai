@@ -4,9 +4,6 @@ export async function POST(req: NextRequest) {
   try {
     const { question, userAnswer } = await req.json();
 
-    console.log("🗣️ Speaking Question:", question);
-    console.log("💬 User Answer:", userAnswer);
-
     if (!question || !userAnswer) {
       return NextResponse.json(
         { error: "Missing question or userAnswer in request body." },
@@ -25,9 +22,6 @@ export async function POST(req: NextRequest) {
     const endpoint = "https://api.groq.com/openai/v1/chat/completions";
     const model = "llama-3.1-8b-instant";
 
-    // ------------------------------------
-    // 🧠 Speaking / Communication Evaluation Prompt
-    // ------------------------------------
     const prompt = `
 You are an IELTS Speaking Examiner and Communication Skills Coach.
 
@@ -64,8 +58,6 @@ User Answer: "${userAnswer}"
     while (retryCount <= maxRetries) {
       try {
         retryCount++;
-        console.log(`🔄 Attempt ${retryCount} to evaluate speaking answer...`);
-
         const response = await fetch(endpoint, {
           method: "POST",
           headers: {
@@ -88,12 +80,10 @@ User Answer: "${userAnswer}"
         const json = await response.json();
         responseText = json.choices?.[0]?.message?.content ?? json.text;
 
-        console.log("📝 Raw GROQ Response:", responseText);
         break;
       } catch (err) {
-        console.warn(`⚠️ Attempt ${retryCount} failed:`, err);
+        console.log(`⚠️ Attempt ${retryCount} failed:`, err);
         if (retryCount > maxRetries) {
-          console.log("📦 Using fallback due to rate limit or retries exceeded");
           return NextResponse.json(
             { error: "Evaluation temporarily unavailable. Please try again later." },
             { status: 503 }

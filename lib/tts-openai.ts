@@ -1,20 +1,3 @@
-// export const speakText = (text: string, onEnd?: () => void) => {
-//   if (!text) return;
-
-//   const utterance = new SpeechSynthesisUtterance(text);
-//   utterance.lang = "en-IN";   // Indian English accent
-//   utterance.rate = 1;         // Speed of speech
-//   utterance.pitch = 1;        // Voice pitch
-
-//   const voices = window.speechSynthesis.getVoices();
-//   const selectedVoice = voices.find(v => v.lang === "en-IN") || voices[0];
-//   if (selectedVoice) utterance.voice = selectedVoice;
-
-//   if (onEnd) utterance.onend = onEnd;
-
-//   window.speechSynthesis.speak(utterance);
-// };
-
 export const speakText = (text: string, onEnd?: () => void) => {
   if (!text) return;
 
@@ -53,7 +36,6 @@ export async function checkMicrophoneAccess(): Promise<boolean> {
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     stream.getTracks().forEach((track) => track.stop());
-    console.log("✅ Microphone permission granted");
     return true;
   } catch (err) {
     console.warn("❌ Microphone access denied:", err);

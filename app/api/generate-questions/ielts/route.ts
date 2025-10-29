@@ -57,12 +57,10 @@ export async function POST() {
 
   // Return cached questions immediately if available
   if (aiGeneratedQuestionsCache.has(cue)) {
-    console.log("♻️ Using cached questions for:", cue);
     return NextResponse.json(aiGeneratedQuestionsCache.get(cue));
   }
 
   if (!GROQ_API_KEY) {
-    console.log("⚠️ No GROQ API key - using fallback");
     return NextResponse.json(getEnhancedFallbackQuestions(cue));
   }
 
@@ -88,8 +86,6 @@ Return ONLY this JSON format:
 
   while (retryCount <= maxRetries) {
     try {
-      console.log(`🔄 Attempt ${retryCount + 1} to generate questions...`);
-
       const completion = await groq.chat.completions.create({
         model,
         messages: [{ role: "user", content: prompt }],
@@ -105,7 +101,6 @@ Return ONLY this JSON format:
 
       if (data?.part1?.length === 5 && data?.part3?.length === 3) {
         aiGeneratedQuestionsCache.set(cue, data);
-        console.log("✅ Successfully generated and cached questions");
         return NextResponse.json(data);
       }
 
@@ -127,7 +122,6 @@ Return ONLY this JSON format:
       console.log(`⏳ Retry ${retryCount}/${maxRetries} — ${errorMessage}`);
 
       if (retryCount > maxRetries || errorStatus === 429) {
-        console.log("📦 Using fallback questions after retries or rate-limit");
         return NextResponse.json(getEnhancedFallbackQuestions(cue));
       }
 

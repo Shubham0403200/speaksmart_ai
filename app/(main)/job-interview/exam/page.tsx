@@ -31,7 +31,6 @@ const JobInterviewPage = () => {
   useEffect(() => {
     const verifySetup = async () => {
       const userField = sessionStorage.getItem("userField");
-      console.log("userField: ", userField); 
 
       if (!userField) {
         toast.error("Please select your field before starting the interview.");
@@ -280,7 +279,7 @@ const JobInterviewPage = () => {
 
         {showDownloadBtn && (
           <div className="mt-4 flex flex-col sm:flex-row gap-3 justify-center">
-            <DownloadFeedbackPDF allAnswers={allAnswers} />
+            <DownloadFeedbackPDF allAnswers={allAnswers} title="Job Interview Feedback" fileName="job_interview_feedback.pdf" />
             <Link href="/">
               <Button className="bg-cyan-600 hover:bg-cyan-700 text-white">
                 Go To Home

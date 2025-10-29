@@ -4,9 +4,6 @@ export async function POST(req: NextRequest) {
   try {
     const { question, userAnswer } = await req.json();
 
-    console.log("🎯 Question:", question);
-    console.log("🗣️ User Answer:", userAnswer);
-
     if (!question || !userAnswer) {
       return NextResponse.json(
         { error: "Missing question or userAnswer in request body." },
@@ -25,9 +22,6 @@ export async function POST(req: NextRequest) {
     const endpoint = "https://api.groq.com/openai/v1/chat/completions";
     const model = "llama-3.1-8b-instant";
 
-    // ------------------------------------
-    // 🧠 Job Interview Evaluation Prompt
-    // ------------------------------------
     const prompt = `
 You are a professional HR interviewer evaluating a candidate's spoken job interview answer.
 
@@ -62,7 +56,6 @@ User Answer: "${userAnswer}"
     while (retryCount <= maxRetries) {
       try {
         retryCount++;
-        console.log(`🔄 Attempt ${retryCount} to evaluate interview answer...`);
 
         const response = await fetch(endpoint, {
           method: "POST",
@@ -85,13 +78,10 @@ User Answer: "${userAnswer}"
 
         const json = await response.json();
         responseText = json.choices?.[0]?.message?.content ?? json.text;
-
-        console.log("📝 Raw GROQ Response:", responseText);
         break;
       } catch (err) {
         console.warn(`⚠️ Attempt ${retryCount} failed:`, err);
         if (retryCount > maxRetries || err) {
-          console.log("📦 Using fallback due to rate limit or retries exceeded");
           return NextResponse.json(
             { error: "Evaluation temporarily unavailable. Please try again later." },
             { status: 503 }

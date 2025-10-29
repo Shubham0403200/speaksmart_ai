@@ -1,6 +1,4 @@
-// app/api/tts/route.ts
 import { NextResponse } from "next/server";
-
 export const runtime = "edge";
 
 export async function POST(req: Request) {
@@ -13,14 +11,11 @@ export async function POST(req: Request) {
 
     const apiKey = process.env.TTS_API_KEY;
     if (!apiKey) {
-      console.error("Missing TTS_API_KEY environment variable");
       return NextResponse.json(
         { error: "TTS service not configured." },
         { status: 500 }
       );
     }
-
-    console.log("🔊 TTS Request for:", text.slice(0, 50), "...");
 
     // Prepare request body as per TTSOpenAI spec
     const body = JSON.stringify({
@@ -50,9 +45,6 @@ export async function POST(req: Request) {
 
     const resultJson = await response.json();
 
-    // The API returns a JSON with metadata, not the audio itself immediately
-    // Usually TTSOpenAI provides a `uuid` or URL to fetch the audio
-    // According to docs, result is in `result.uuid` etc. :contentReference[oaicite:3]{index=3}
     const { result } = resultJson;
     if (!result || !result.uuid) {
       console.error("❌ Missing result or uuid in TTSOpenAI response", resultJson);
@@ -60,8 +52,6 @@ export async function POST(req: Request) {
     }
 
     const uuid = result.uuid;
-    // Build audio URL (docs mention you fetch via another endpoint or path)
-    // Suppose audio URL is: https://api.ttsopenai.com/uapi/v1/text-to-speech/{uuid}
     const audioFetch = await fetch(`https://api.ttsopenai.com/uapi/v1/text-to-speech/${uuid}`, {
       headers: {
         "x-api-key": apiKey
@@ -89,9 +79,6 @@ export async function POST(req: Request) {
     });
   } catch (error) {
     console.error("TTSOpenAI API error:", error);
-    return NextResponse.json(
-      { error: "Text-to-speech generation failed." },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Text-to-speech generation failed." },{ status: 500 });
   }
 }

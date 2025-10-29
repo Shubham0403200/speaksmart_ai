@@ -5,9 +5,6 @@ export async function POST(req: NextRequest) {
   try {
     const { question, userAnswer } = await req.json();
 
-    console.log("🎯 Question:", question);
-    console.log("🗣️ User Answer:", userAnswer);
-
     if (!question || !userAnswer) {
       return NextResponse.json(
         { error: "Missing question or userAnswer in request body." },
@@ -88,8 +85,6 @@ UserAnswer: "${userAnswer}"
     while (retryCount <= maxRetries) {
       try {
         retryCount++;
-        console.log(`🔄 Attempt ${retryCount} to evaluate answer...`);
-
         const response = await fetch(endpoint, {
           method: "POST",
           headers: {
@@ -111,15 +106,12 @@ UserAnswer: "${userAnswer}"
 
         const json = await response.json();
         responseText = json.choices?.[0]?.message?.content ?? json.text;
-
-        console.log("📝 Raw GROQ Response:", responseText);
         break;
       } catch (err: unknown) {
         console.warn(`⚠️ Evaluation attempt ${retryCount} failed:`, err);
 
         const status = (err as unknown);
         if (retryCount > maxRetries || status === 429) {
-          console.log("📦 Using fallback: rate-limit or retries exceeded.");
           return NextResponse.json(
             { error: "Evaluation API limit reached. Please try again later." },
             { status: 503 }
@@ -145,7 +137,7 @@ UserAnswer: "${userAnswer}"
         .replace(/(\r\n|\n|\r)/gm, " ");
       parsed = JSON.parse(cleaned);
     } catch (err) {
-      console.error("❌ JSON parse failed after cleaning:", err);
+      console.log("❌ JSON parse failed after cleaning:", err);
       throw new Error("Failed to parse AI response JSON.");
     }
 

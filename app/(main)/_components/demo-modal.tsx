@@ -54,9 +54,9 @@ export default function DemoModal() {
       <div className="mt-4">
         <div>
           {/* {!recording ? ( */}
-            <Link href='/communication'>            
+            <Link href='/speaking'>            
               <Button>
-                Start Recording
+                Start Your Test
               </Button>
             </Link>
           {/* // ) : (

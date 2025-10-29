@@ -1,19 +1,18 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 /**
- * Prevents navigation (Back button, Link clicks, Refresh, Close tab)
- * while a critical test or exam is running.
+ * Prevents navigation (Back, Link clicks, Refresh, Close tab)
+ * during a test or exam session.
  *
- * Call this hook in your component:
- *   useNavigationBlocker(true);
+ * Example: useNavigationBlocker(true);
  */
 export const useNavigationBlocker = (isBlocking: boolean = true) => {
+  const hasPushedState = useRef(false);
+
   useEffect(() => {
     if (!isBlocking) return;
 
-    let unblockOnce = false;
-
-    // 1) beforeunload — handles refresh / tab close
+    // --- 1. Handle refresh / tab close
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
       e.preventDefault();
       e.returnValue =
@@ -22,30 +21,35 @@ export const useNavigationBlocker = (isBlocking: boolean = true) => {
     };
     window.addEventListener("beforeunload", handleBeforeUnload);
 
-    // 2) push fake history state for Back button
-    try {
-      window.history.pushState({ guarded: true }, "", window.location.href);
-    } catch {}
+    // --- 2. Push only once to trap Back button
+    if (!hasPushedState.current) {
+      try {
+        window.history.pushState({ guarded: true }, "", window.location.href);
+        hasPushedState.current = true;
+      } catch {}
+    }
 
-    // 3) handle Back/Forward button
+    // --- 3. Intercept Back/Forward button
     const handlePopState = () => {
       const ok = window.confirm(
-        "⚠️ Are you sure you want to leave? Your IELTS test progress will be lost."
+        "⚠️ Are you sure you want to leave? Your test progress will be lost."
       );
       if (ok) {
-        unblockOnce = true;
-        // Let browser actually go back
+        // allow going back once
+        window.removeEventListener("beforeunload", handleBeforeUnload);
+        window.removeEventListener("popstate", handlePopState);
+        document.removeEventListener("click", handleDocumentClick, true);
         history.back();
       } else {
+        // stay on page by restoring state
         try {
-          // Push again to prevent exit
           history.pushState({ guarded: true }, "", window.location.href);
         } catch {}
       }
     };
     window.addEventListener("popstate", handlePopState);
 
-    // 4) Intercept internal link clicks (Next.js Links, anchors)
+    // --- 4. Intercept internal link clicks
     const handleDocumentClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
       if (!target) return;
@@ -61,27 +65,23 @@ export const useNavigationBlocker = (isBlocking: boolean = true) => {
       if (!isInternal) return;
 
       e.preventDefault();
-
       const ok = window.confirm(
         "⚠️ Are you sure you want to leave? Your IELTS test progress will be lost."
       );
       if (ok) {
-        unblockOnce = true;
-        window.location.href = href; // force navigate
+        window.removeEventListener("beforeunload", handleBeforeUnload);
+        window.removeEventListener("popstate", handlePopState);
+        document.removeEventListener("click", handleDocumentClick, true);
+        window.location.href = href;
       }
     };
     document.addEventListener("click", handleDocumentClick, true);
 
-    // Cleanup on unmount
+    // --- 5. Cleanup
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
       window.removeEventListener("popstate", handlePopState);
       document.removeEventListener("click", handleDocumentClick, true);
-      if (!unblockOnce) {
-        try {
-          history.replaceState({}, "", window.location.href);
-        } catch {}
-      }
     };
   }, [isBlocking]);
 };

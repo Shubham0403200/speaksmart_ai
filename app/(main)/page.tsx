@@ -7,7 +7,6 @@ import Modes from "./_components/modes";
 import FeedbackComponent from "./_components/feedback-component";
 
 const HomePage = () => {
-  
   return (
     <div>
       <HeroSection />

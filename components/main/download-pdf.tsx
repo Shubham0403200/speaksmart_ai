@@ -12,14 +12,14 @@ interface AnswerRecord {
 
 interface DownloadFeedbackPDFProps {
   allAnswers: AnswerRecord[];
-  title?: string;
-  fileName?: string;
+  title: string;
+  fileName: string;
 }
 
 export const DownloadFeedbackPDF: React.FC<DownloadFeedbackPDFProps> = ({
   allAnswers,
-  title = "IELTS Speaking Test Feedback",
-  fileName = "IELTS_Feedback.pdf",
+  title,
+  fileName,
 }) => {
   const generatePDF = () => {
     if (!allAnswers.length) return;
